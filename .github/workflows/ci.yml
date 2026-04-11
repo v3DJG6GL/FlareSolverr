@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build Docker image
+        run: docker build -t flaresolverr-test .
+
+      - name: Smoke test
+        run: |
+          docker run --rm --entrypoint python flaresolverr-test -c \
+            "import flaresolverr; print('All imports OK')"
