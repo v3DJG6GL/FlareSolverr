@@ -2,9 +2,6 @@ name: Docker release
 
 on:
   push:
-    tags:
-      - "v*.*.*"
-  pull_request:
     branches:
       - master
 
@@ -14,7 +11,6 @@ concurrency:
 
 jobs:
   build-docker-images:
-    if: ${{ !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -31,11 +27,7 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ env.REPOSITORY }}
-          tags: |
-            type=semver,pattern={{version}},prefix=v
-            type=ref,event=pr
-          flavor: |
-            latest=auto
+          tags: type=raw,value=latest
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
