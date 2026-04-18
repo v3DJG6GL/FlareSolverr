@@ -7,7 +7,7 @@ prometheus-client==0.25.0
 requests==2.33.1
 certifi==2026.2.25
 websockets==16.0
-packaging==26.0
+packaging==26.1
 # Only required for Linux and macOS
 xvfbwrapper==0.2.23; platform_system != "Windows"
 # Only required for Windows
