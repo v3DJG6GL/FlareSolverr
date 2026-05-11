@@ -29,6 +29,7 @@ RUN dpkg -i /libgl1-mesa-dri.deb \
     && dpkg -i /adwaita-icon-theme.deb \
     # Install dependencies
     && apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends chromium chromium-common chromium-driver xvfb dumb-init \
         procps curl vim xauth \
     # Remove temporary files and hardware decoding libraries

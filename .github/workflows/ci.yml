@@ -15,7 +15,42 @@ jobs:
       - name: Build Docker image
         run: docker build -t flaresolverr-test .
 
-      - name: Smoke test
+      - name: Start FlareSolverr container
         run: |
-          docker run --rm --entrypoint python flaresolverr-test -c \
-            "import flaresolverr; print('All imports OK')"
+          docker run -d --name fs \
+            --shm-size=2g \
+            -p 8191:8191 \
+            flaresolverr-test
+
+      - name: Wait for /health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8191/health 2>/dev/null | grep -q '"status"'; then
+              echo "FlareSolverr is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "FlareSolverr failed to become healthy"
+          docker logs fs
+          exit 1
+
+      - name: Smoke test /v1 (request.get against example.com)
+        run: |
+          response=$(curl -fsS -X POST http://localhost:8191/v1 \
+            -H "Content-Type: application/json" \
+            -d '{"cmd":"request.get","url":"https://example.com","maxTimeout":60000}')
+          echo "$response"
+          echo "$response" | grep -q '"status": *"ok"' || {
+            echo "v1 smoke test failed"
+            docker logs fs
+            exit 1
+          }
+
+      - name: Container logs (on failure)
+        if: failure()
+        run: docker logs fs || true
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f fs || true

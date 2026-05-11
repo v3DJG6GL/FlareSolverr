@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+  schedule:
+    # Weekly rebuild to pick up Debian security updates for chromium and other apt packages
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
