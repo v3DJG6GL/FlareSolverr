@@ -1,4 +1,8 @@
-### Fork of [FlareSolverr/FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) to keep dependencies updated :)
+> [!NOTE]
+> # FORKED REPOSITORY
+> ### Fork of [FlareSolverr/FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) to keep dependencies updated :)
+
+
 
 # FlareSolverr
 
