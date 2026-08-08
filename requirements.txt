@@ -6,8 +6,8 @@ prometheus-client==0.26.0
 # Required by undetected_chromedriver
 requests==2.34.2
 certifi==2026.7.22
-websockets==16.1.1
-packaging==26.2
+websockets==17.0.1
+packaging==26.3
 # Only required for Linux and macOS
 xvfbwrapper==0.2.29; platform_system != "Windows"
 # Only required for Windows
