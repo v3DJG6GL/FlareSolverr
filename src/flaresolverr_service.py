@@ -53,7 +53,6 @@ TURNSTILE_SELECTORS = [
     "input[name='cf-turnstile-response']"
 ]
 
-SHORT_TIMEOUT = 1
 SESSIONS_STORAGE = SessionsStorage()
 
 
@@ -305,10 +304,16 @@ def _get_turnstile_token(driver: WebDriver, tabs: int):
 
         # reset focus
         driver.execute_script("""
+            let old = document.getElementById('__focus_helper');
+            if (old) old.remove();
+
             let el = document.createElement('button');
-            el.style.position='fixed';
-            el.style.top='0';
-            el.style.left='0';
+            el.id = '__focus_helper';
+            el.style.position = 'fixed';
+            el.style.top = '0';
+            el.style.left = '0';
+            el.style.opacity = '0.01';
+            el.style.pointerEvents = 'none';
             document.body.prepend(el);
             el.focus();
         """)
@@ -422,6 +427,7 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
                 logging.info("Challenge detected. Selector found: " + selector)
                 break
 
+    browser_wait_timeout = utils.get_config_browser_wait_timeout()
     attempt = 0
     if challenge_found:
         while True:
@@ -430,12 +436,12 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
                 # wait until the title changes
                 for title in CHALLENGE_TITLES:
                     logging.debug("Waiting for title (attempt " + str(attempt) + "): " + title)
-                    WebDriverWait(driver, SHORT_TIMEOUT).until_not(title_is(title))
+                    WebDriverWait(driver, browser_wait_timeout).until_not(title_is(title))
 
                 # then wait until all the selectors disappear
                 for selector in CHALLENGE_SELECTORS:
                     logging.debug("Waiting for selector (attempt " + str(attempt) + "): " + selector)
-                    WebDriverWait(driver, SHORT_TIMEOUT).until_not(
+                    WebDriverWait(driver, browser_wait_timeout).until_not(
                         presence_of_element_located((By.CSS_SELECTOR, selector)))
 
                 # all elements not found
@@ -453,7 +459,7 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
         logging.debug("Waiting for redirect")
         # noinspection PyBroadException
         try:
-            WebDriverWait(driver, SHORT_TIMEOUT).until(staleness_of(html_element))
+            WebDriverWait(driver, browser_wait_timeout).until(staleness_of(html_element))
         except Exception:
             logging.debug("Timeout waiting for redirect")
 
@@ -466,7 +472,6 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
     challenge_res = ChallengeResolutionResultT({})
     challenge_res.url = driver.current_url
     challenge_res.status = 200  # todo: fix, selenium not provides this info
-    challenge_res.cookies = driver.get_cookies()
     challenge_res.userAgent = utils.get_user_agent(driver)
     challenge_res.turnstile_token = turnstile_token
 
@@ -481,6 +486,9 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
 
     if req.returnScreenshot:
         challenge_res.screenshot = driver.get_screenshot_as_base64()
+
+    # Get cookies after all waits to capture cookies set during JavaScript execution
+    challenge_res.cookies = driver.get_cookies()
 
     res.result = challenge_res
     return res
